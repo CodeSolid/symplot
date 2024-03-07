@@ -1,26 +1,35 @@
-from sympy import symbols
+from sympy import symbols, Expr
+from sympy.utilities.lambdify import implemented_function
+from sympy import lambdify
 import sympy.geometry as geo
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-# For test_triangle()
-from sympy import Point, sqrt
 
 def get_plotter(obj):
 	if isinstance(obj, geo.Polygon):
 		return plot_polygon
 	elif isinstance(obj, geo.Circle):
 		return plot_circle
+	elif isinstance(obj, Expr):
+		return plot_expression
 	else:
 		return None
-	#plotters = {geo.RegularPolygon: plot_polygon, geo.Triangle: plot_polygon}
-	#return plotters.get(type(obj))
+
 
 def get_default_axes():
 	_, axes = plt.subplots(1)
 	axes.set_aspect(1)
 	return axes
+
+def plot_expression(obj, axes, **kwargs):
+	x_vals = np.linspace(-10, 10, 100)
+	fn = lambdify(symbols('x'), obj)
+	y_vals = [fn(x) for x in x_vals]
+	axes.set_xlim(-10, 10)
+	axes.set_ylim(-10, 10)
+	axes.plot(x_vals, y_vals)
+
 
 def plot_circle(obj, axes, **kwargs):
 	circ = obj
@@ -56,4 +65,11 @@ def plot_segments(segments, axes, **kwargs):
 		x,y = make_plottable(*s.points)
 		axes.plot(x, y, **kwargs)
 
-
+def test_sympy_expression():
+	import sympy as sp
+	
+	x = sp.symbols('x')
+	f = x**3 - x/2
+	ax = plot(f)
+	print("plot_expression successfully returned a(n)", type(ax))
+	
